@@ -19,3 +19,5 @@ jobs:
           test -s docs/PRD_TRACEABILITY.md
           test -s docs/PRD_CONTEXT.md
           echo 'Scaffold checks passed (not application/runtime tests)'
+      - name: Validate discovery documentation
+        run: python3 tests/check_discovery.py
