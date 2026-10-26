@@ -1,0 +1,21 @@
+name: scaffold-validation
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate example JSON and expected docs
+        run: |
+          python3 -m json.tool contracts/event-examples.json >/dev/null
+          test -s README.md
+          test -s AGENTS.md
+          test -s docs/ROADMAP.md
+          test -s docs/PRD_TRACEABILITY.md
+          test -s docs/PRD_CONTEXT.md
+          echo 'Scaffold checks passed (not application/runtime tests)'
