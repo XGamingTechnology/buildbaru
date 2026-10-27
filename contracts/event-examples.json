@@ -1,0 +1,36 @@
+{
+  "schema_status": "illustrative_only",
+  "events": [
+    {
+      "event_type": "connection_attempt",
+      "event_id": "evt-synthetic-1",
+      "ts": "2026-10-26T00:00:00Z",
+      "source_ref_pseudonym": "demo-pseudo-1",
+      "outcome": "accepted",
+      "elapsed_ms": 142,
+      "edge_reason": "none"
+    },
+    {
+      "event_type": "economic_mutation",
+      "tx_id": "tx-synthetic-1",
+      "account_ref": "demo-account",
+      "delta": -100,
+      "currency": "game_cash",
+      "cause": "synthetic_test",
+      "idempotency_key": "test-retry-1",
+      "actor_ref": "demo-actor"
+    },
+    {
+      "event_type": "security_incident",
+      "incident_id": "inc-synthetic-1",
+      "severity": "SEV-3",
+      "status": "open",
+      "evidence_refs": [
+        "evt-synthetic-1"
+      ],
+      "decisions": [],
+      "approver": null,
+      "rollback_ref": null
+    }
+  ]
+}
