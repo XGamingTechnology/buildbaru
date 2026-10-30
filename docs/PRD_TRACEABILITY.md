@@ -4,6 +4,7 @@
 |---|---|---|
 | Protected edge | NET-001, NET-002, NET-003, NET-008 | Vendor PoC, no origin bypass, measured traffic path |
 | Restricted operations | NET-004, SEC-013, NFR-14 | Private admin/DB/Redis, audited operator access |
+| Qbox money + banking | `rp_qbx_bridge`, `rp_banking`, migration 0003, ADR 0003 | Unit tests: money guard enforce/observe, case-safe idempotency keys, bank request validation, distance check, rate limiter; MariaDB tests for `econ_open_account` | FXServer run with qbx_core/ox_lib, hook behaviour, UI check |
 | Fail-safe join | NET-005, NET-006, NET-007, SEC-004 | Queue tests, CGNAT tests, safe failure mode |
 | Economy integrity | RP-002, RP-004, RP-005, G-04 | Atomic ledger, idempotent replay, race/restore tests |
 | Telemetry | SEC-001, SEC-002, SEC-014 | Versioned event schema, non-blocking ingestion, overflow metric |

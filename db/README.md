@@ -7,6 +7,7 @@ the `mariadb`/`mysql` CLI (the files use `DELIMITER`):
 |---|---|---|---|
 | 0000 | `0000_schema_migrations.up.sql` (idempotent bookkeeping) | none | — |
 | 0001 | `0001_economy_ledger.up.sql` | `0001_economy_ledger.down.sql` (destroys economy data) | RP-002, RP-004, RP-005, G-04 |
+| 0003 | `0003_econ_open_account.up.sql` | `0003_econ_open_account.down.sql` (drops the procedure only) | RP-004, G-04 |
 | 0002 | `0002_operator_workflow.up.sql` | `0002_operator_workflow.down.sql` (destroys the audit trail; export first) | SEC-008, SEC-009, SEC-013 |
 
 ## Economy rules enforced by the database
