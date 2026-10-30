@@ -24,6 +24,9 @@ Qbox needs for its own tables.
 
 ## Required edits in `qbx_core/config/server.lua` (on the host)
 
+`deploy/staging/setup.sh` applies edit 1 automatically on staging when the stock
+code matches.
+
 1. Route paychecks through the ledger:
    ```lua
    sendPaycheck = function(player, payment)
