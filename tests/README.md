@@ -9,6 +9,7 @@ python3 -m unittest discover -s tests -v
 
 | File | Covers | Needs |
 |---|---|---|
+| `test_static.py` | All Lua files compile (Lua 5.4), shell scripts parse, selftest not in the production example | — |
 | `test_contracts.py` | Six v1 schemas, valid examples, privacy and negative fixtures | — |
 | `test_lua_units.py` | Telemetry queue bounds, envelope privacy guard, economy request validation (Lua 5.4 via lupa) | — |
 | `test_admission.py` | Admission modes, CGNAT fairness, cooldown expiry, queue order/capacity/reservations/timeout, pseudonym refs, schema fit | — |
@@ -18,7 +19,7 @@ python3 -m unittest discover -s tests -v
 `test_db_ledger.py` and `test_db_ops.py` drop and recreate their tables. Never
 point them at a shared or production database.
 
-Not yet covered: running resources inside FXServer, oxmysql result shapes,
+Not yet covered (see `deploy/staging` for the FXServer selftest): running resources inside FXServer, oxmysql result shapes,
 permissions, inventory, FXServer deferrals, restore drills and any
 performance gate. No test here demonstrates real FiveM behaviour or CCU.
 
