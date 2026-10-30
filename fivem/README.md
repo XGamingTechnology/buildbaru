@@ -11,11 +11,14 @@ fivem/
     [sentinel]/sentinel_telemetry   # Emit/GetStats exports, observe mode by default
     [sentinel]/sentinel_admission   # join queue, CGNAT-safe, fail-open (docs/ADMISSION.md)
     [rp]/rp_economy                 # server-only Transfer export over econ_transfer
+    [rp]/rp_qbx_bridge              # ledger-authoritative Qbox money (replaces pri_base)
+    [rp]/rp_banking                 # bank deposit/withdraw/transfer (replaces pri_banking)
     [dev]/sentinel_selftest         # staging-only smoke checks (deploy/staging), never in production
 ```
 
-The RP core (Qbox vs custom/legacy) is not included until the D-02 spike is
-decided. Third-party resources such as `oxmysql` are not vendored.
+The RP core is Qbox ([ADR 0003](../docs/adr/0003-qbox-core-ledger-authority.md),
+[setup](../docs/QBOX.md)). Third-party resources such as `qbx_core`, `ox_lib`
+and `oxmysql` are not vendored.
 
 ## Rules for every resource
 - The server validates every economy and permission change. Clients only send

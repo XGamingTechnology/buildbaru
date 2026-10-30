@@ -3,7 +3,7 @@
 | ID | Decision | Status |
 |---|---|---|
 | D-01 | Rebuild or audit/reuse historical server code | Open |
-| D-02 | Qbox vs custom/legacy core technical spike | Open |
+| D-02 | Qbox vs custom/legacy core technical spike | Decided: Qbox (owner, 2026-10-30); staging evidence pending — [ADR 0003](adr/0003-qbox-core-ledger-authority.md) |
 | D-03 | Hosting location and verified DDoS game-provider selection | Open |
 | D-04 | 128–256 beta, 500 gate, 1,000 stretch | Proposal |
 | D-05 | Observe/shadow AI before measured enforcement | Proposal |

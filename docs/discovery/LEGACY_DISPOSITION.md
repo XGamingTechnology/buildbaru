@@ -49,11 +49,11 @@ Ordered roughly by dependency. All of these depend on ESX, so the target core
 | Resource | Ensured | Money events | Other flags | Notes |
 |---|---|---:|---|---|
 | `es_extended` | yes | 31 | 12 webhooks | Framework core: replaced by the D-02 choice, not carried over |
-| `pri_base` | no (dependency) | 0 | DB string | Bundles `mysql-async`; replaced by `oxmysql` + migrations |
+| `pri_base` | no (dependency) | 0 | DB string | Replaced by `rp_qbx_bridge` + `oxmysql` + migrations (ADR 0003) |
 | `pri_core` | yes | 14 | — | Core gameplay glue |
 | `pri_depencies` | yes | 11 | — | Shared helpers; review what is still needed |
 | `essentials` | yes | 28 | 31 webhooks, 11 identifiers | Large script pack (108 Lua); split by feature |
-| `pri_banking` | yes | 46 | 13 identifiers | Must go through `rp_economy` Transfer |
+| `pri_banking` | yes | 46 | 13 identifiers | Replaced by `rp_banking` (ADR 0003) |
 | `pri_jobs` | yes | 158 | 8 archives inside | Highest money-event count; job payouts via Transfer |
 | `pri_nonwhitelistjobs` | yes | 6 | 6 data files | Same as jobs |
 | `pri_vehicle` | yes | 56 | — | Purchases and ownership via Transfer |

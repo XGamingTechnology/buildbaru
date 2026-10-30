@@ -36,9 +36,19 @@ set sentinel_admission_cooldown_s 30
 # --- Economy ---
 set rp_economy_max_transfer 100000000
 
+# --- Qbox bridge and banking (docs/QBOX.md) ---
+set rp_qbx_money_guard enforce
+set rp_qbx_opening_cash 500
+set rp_qbx_opening_bank 5000
+set rp_qbx_paycheck_window_s 600
+
 # --- Resource start order ---
-# Framework core (Qbox vs custom) is undecided (D-02) and intentionally absent.
-ensure oxmysql              # third-party, not vendored; license review D-09
+# Qbox (D-02, ADR 0003); third-party resources are not vendored (D-09).
+ensure ox_lib
+ensure oxmysql
+ensure qbx_core
 ensure sentinel_telemetry
 ensure sentinel_admission
 ensure rp_economy
+ensure rp_qbx_bridge
+ensure rp_banking
