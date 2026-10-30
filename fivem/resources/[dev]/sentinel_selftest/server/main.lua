@@ -16,6 +16,10 @@ local function check(name, ok, detail)
   print(('[selftest] %s %s%s'):format(ok and 'PASS' or 'FAIL', name, detail and (' -- ' .. detail) or ''))
 end
 
+local function skip(name, why)
+  print(('[selftest] SKIP %s -- %s'):format(name, why))
+end
+
 local function summary()
   local passed = 0
   for _, ok in ipairs(results) do
@@ -97,6 +101,39 @@ local function run()
 
   local active = MySQL.scalar.await('SELECT COUNT(*) FROM ops_active_mitigations')
   check('operator workflow view readable', active ~= nil, tostring(active))
+
+  -- Qbox stack (ADR 0003). Skipped when Qbox is not installed on this host.
+  if GetResourceState('qbx_core') == 'missing' then
+    skip('Qbox checks', 'qbx_core is not installed')
+  else
+    for _, res in ipairs({ 'ox_lib', 'qbx_core', 'rp_qbx_bridge', 'rp_banking' }) do
+      check('resource started: ' .. res, GetResourceState(res) == 'started', GetResourceState(res))
+    end
+
+    local qbxConfig = LoadResourceFile('qbx_core', 'config/server.lua') or ''
+    check('qbx_core paychecks routed through the ledger',
+      qbxConfig:find('rp_qbx_bridge:Paycheck', 1, true) ~= nil)
+
+    if GetResourceState('rp_qbx_bridge') == 'started' then
+      -- A synthetic citizenid that no real character uses.
+      local cid = 'SELFTEST01'
+      local first = exports.rp_qbx_bridge:AccountId(cid, 'bank')
+      local second = exports.rp_qbx_bridge:AccountId(cid, 'bank')
+      check('bridge opens one ledger account per character and type',
+        first ~= nil and first == second, ('%s / %s'):format(tostring(first), tostring(second)))
+      local minted = tonumber(MySQL.scalar.await(
+        'SELECT COUNT(*) FROM econ_transactions WHERE idempotency_key = ?', { 'open-' .. cid .. '-bank' }))
+      local expectMint = GetConvarInt('rp_qbx_opening_bank', 5000) > 0 and 1 or 0
+      check('opening balance minted exactly once', minted == expectMint, tostring(minted))
+      check('bridge refuses an invalid citizenid',
+        exports.rp_qbx_bridge:AccountId('license:abc', 'bank') == nil)
+      check('bridge refuses money types outside the ledger',
+        exports.rp_qbx_bridge:AccountId(cid, 'crypto') == nil)
+      local total = tonumber(MySQL.scalar.await('SELECT SUM(balance) FROM econ_accounts'))
+      check('ledger still reconciles after bridge minting', total == 0, tostring(total))
+    end
+    skip('money guard, paycheck and banking', 'need a connected client; see deploy/staging/README.md')
+  end
 
   summary()
 end
