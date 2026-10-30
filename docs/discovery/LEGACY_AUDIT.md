@@ -1,6 +1,8 @@
 # D-01 — Legacy audit template
 
-Status: unfilled; no historical server, assets or infrastructure have been inspected.
+Status: template. Audit LA-001 (inventory) was executed on 2026-10-30; see
+[legacy-audit-001.md](legacy-audit-001.md) and the draft
+[disposition](LEGACY_DISPOSITION.md). Licensing and security review are still open.
 Source: [PRD context](../PRD_CONTEXT.md); the full private PRD is unavailable.
 Requirement mappings are provisional: G-04, RP-004, NET-004, SEC-013,
 SEC-001/002/014 and PERF-G0. Confirm exact scope against the owner PRD.
