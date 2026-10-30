@@ -1,5 +1,8 @@
 """Shared test helpers. Synthetic data only."""
 import json
+import os
+import shutil
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,3 +48,31 @@ def pair(result):
     if isinstance(result, tuple):
         return (result + (None, None))[:2]
     return result, None
+
+
+# --- Disposable MariaDB (see tests/README.md); never a shared or production DB ---
+MIGRATIONS = ROOT / 'db' / 'migrations'
+DB_ENV = {k: os.environ.get(f'SENTINEL_TEST_DB_{k.upper()}') for k in ('host', 'port', 'user', 'password', 'name')}
+DB_ENABLED = bool(DB_ENV['host'] and DB_ENV['user'] and DB_ENV['name'])
+
+
+def run_sql_file(path):
+    client = shutil.which('mariadb') or shutil.which('mysql')
+    if client is None:
+        raise RuntimeError('mariadb/mysql CLI is required to apply migrations')
+    subprocess.run(
+        [client, '--protocol=TCP', '-h', DB_ENV['host'], '-P', DB_ENV['port'] or '3306',
+         '-u', DB_ENV['user'], DB_ENV['name']],
+        input=Path(path).read_bytes(), check=True,
+        env={**os.environ, 'MYSQL_PWD': DB_ENV['password'] or ''},
+    )
+
+
+def connect():
+    import pymysql
+
+    return pymysql.connect(
+        host=DB_ENV['host'], port=int(DB_ENV['port'] or 3306), user=DB_ENV['user'],
+        password=DB_ENV['password'] or '', database=DB_ENV['name'],
+        autocommit=True, cursorclass=pymysql.cursors.DictCursor,
+    )

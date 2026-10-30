@@ -5,39 +5,10 @@ a shared or production database: setUp drops and recreates the economy tables.
   SENTINEL_TEST_DB_HOST, SENTINEL_TEST_DB_PORT (3306), SENTINEL_TEST_DB_USER,
   SENTINEL_TEST_DB_PASSWORD, SENTINEL_TEST_DB_NAME
 """
-import os
-import shutil
-import subprocess
 import threading
 import unittest
 
-from helpers import ROOT
-
-MIGRATIONS = ROOT / 'db' / 'migrations'
-ENV = {k: os.environ.get(f'SENTINEL_TEST_DB_{k.upper()}') for k in ('host', 'port', 'user', 'password', 'name')}
-ENABLED = bool(ENV['host'] and ENV['user'] and ENV['name'])
-
-
-def run_sql_file(path):
-    client = shutil.which('mariadb') or shutil.which('mysql')
-    if client is None:
-        raise RuntimeError('mariadb/mysql CLI is required to apply migrations')
-    subprocess.run(
-        [client, '--protocol=TCP', '-h', ENV['host'], '-P', ENV['port'] or '3306',
-         '-u', ENV['user'], ENV['name']],
-        input=path.read_bytes(), check=True,
-        env={**os.environ, 'MYSQL_PWD': ENV['password'] or ''},
-    )
-
-
-def connect():
-    import pymysql
-
-    return pymysql.connect(
-        host=ENV['host'], port=int(ENV['port'] or 3306), user=ENV['user'],
-        password=ENV['password'] or '', database=ENV['name'],
-        autocommit=True, cursorclass=pymysql.cursors.DictCursor,
-    )
+from helpers import DB_ENABLED as ENABLED, MIGRATIONS, connect, run_sql_file
 
 
 def transfer(conn, key, src, dst, amount, reason='synthetic_test', actor='test-actor'):
