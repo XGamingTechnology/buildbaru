@@ -18,6 +18,7 @@ All items above were *unimplemented* in the bootstrap.
 | Slice | Draft artifact | Evidence so far | Still missing |
 |---|---|---|---|
 | Economy integrity | `db/migrations/0001_*`, `fivem/resources/[rp]/rp_economy` | MariaDB tests: atomic transfer, idempotent replay, concurrent debit/duplicate, lock timeout, append-only, reconciliation | FXServer/oxmysql run, restore drill, review |
+| Fail-safe join | `fivem/resources/[sentinel]/sentinel_admission`, `docs/ADMISSION.md` | Unit tests: observe never refuses, CGNAT 200-on-one-source admitted, per-identity cooldown expires, FIFO/reservations/timeout, reconnect keeps place, refs hide raw values | FXServer deferral run, observe-mode data, enforce approval |
 | Telemetry | `contracts/schemas/v1`, `fivem/resources/[sentinel]/sentinel_telemetry` | Schema + negative fixtures; Lua queue bound and privacy guard unit tests | FXServer run, ingest service, retention (D-08) |
 
 See [ADR 0002](adr/0002-framework-agnostic-base.md). Passing these tests is not

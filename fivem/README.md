@@ -9,6 +9,7 @@ fivem/
   secrets.cfg.example       # copy to secrets.cfg on the host (git-ignored)
   resources/
     [sentinel]/sentinel_telemetry   # Emit/GetStats exports, observe mode by default
+    [sentinel]/sentinel_admission   # join queue, CGNAT-safe, fail-open (docs/ADMISSION.md)
     [rp]/rp_economy                 # server-only Transfer export over econ_transfer
 ```
 
