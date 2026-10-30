@@ -7,6 +7,7 @@ the `mariadb`/`mysql` CLI (the files use `DELIMITER`):
 |---|---|---|---|
 | 0000 | `0000_schema_migrations.up.sql` (idempotent bookkeeping) | none | — |
 | 0001 | `0001_economy_ledger.up.sql` | `0001_economy_ledger.down.sql` (destroys economy data) | RP-002, RP-004, RP-005, G-04 |
+| 0002 | `0002_operator_workflow.up.sql` | `0002_operator_workflow.down.sql` (destroys the audit trail; export first) | SEC-008, SEC-009, SEC-013 |
 
 ## Economy rules enforced by the database
 - Money moves only via `CALL econ_transfer(key, from, to, amount, reason, actor)`.
@@ -21,3 +22,6 @@ the `mariadb`/`mysql` CLI (the files use `DELIMITER`):
 
 Use a least-privilege application user in production (EXECUTE on the
 procedure, SELECT where needed); grants are pending NET-004/SEC-013.
+
+Operator roles, mitigation lifecycle and the hash-chained audit log are
+described in [`docs/OPERATOR_WORKFLOW.md`](../docs/OPERATOR_WORKFLOW.md).
