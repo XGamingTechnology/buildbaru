@@ -23,3 +23,12 @@ All items above were *unimplemented* in the bootstrap.
 
 See [ADR 0002](adr/0002-framework-agnostic-base.md). Passing these tests is not
 acceptance of any PRD requirement.
+
+## Discovery planning artifacts (not implementation evidence)
+
+- D-01: [legacy audit](discovery/LEGACY_AUDIT.md); provisional G-04, RP-004, NET-004, SEC-013, SEC-001/002/014 and PERF-G0.
+- D-02: [spike matrix](discovery/TECHNICAL_SPIKE.md); provisional G-04, RP-004, NET-007, SEC-001/002/014, SEC-013, NFR-03 and PERF-G0.
+- [ADR draft](adr/0001-discovery-method.md) and [kickoff gates](discovery/KICKOFF_GATES.md): owners TBD; full PRD reconciliation pending.
+
+D-01/D-02 are decision IDs, not newly invented PRD requirements. All mappings
+require source confirmation; no audit, benchmark or framework selection has run.

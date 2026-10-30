@@ -12,3 +12,8 @@
 | D-08 | Log retention and privacy policy | Open |
 | D-09 | Third-party license and security audit | Open |
 | D-10 | Team, budget and cost quotation approval | Open |
+
+D-01/D-02 remain open. See [ADR 0001 (draft)](adr/0001-discovery-method.md),
+[legacy audit template](discovery/LEGACY_AUDIT.md),
+[technical spike plan](discovery/TECHNICAL_SPIKE.md) and
+[kickoff evidence gates](discovery/KICKOFF_GATES.md). No results are available yet.

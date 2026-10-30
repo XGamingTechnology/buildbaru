@@ -20,3 +20,10 @@ shared or production database.
 Not yet covered: running resources inside FXServer, oxmysql result shapes,
 permissions, inventory, FXServer deferrals, restore drills and any
 performance gate. No test here demonstrates real FiveM behaviour or CCU.
+
+## Discovery static validation
+
+Run `python3 tests/check_discovery.py` from the repository root (Python standard
+library only). CI runs this check alongside the existing scaffold checks. It
+checks document titles, whitespace, fence balance, relative file links and spike
+matrix weight totals; it does not validate PRD completeness or runtime behavior.

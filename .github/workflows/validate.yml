@@ -19,6 +19,8 @@ jobs:
           test -s docs/PRD_TRACEABILITY.md
           test -s docs/PRD_CONTEXT.md
           echo 'Scaffold checks passed (not application/runtime tests)'
+      - name: Validate discovery documentation
+        run: python3 tests/check_discovery.py
 
   tests:
     # Contract, pure-Lua and ledger tests on synthetic data. They do NOT run
