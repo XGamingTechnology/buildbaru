@@ -1,0 +1,4 @@
+# Test-only dependencies (local/synthetic data only).
+jsonschema==4.26.0
+lupa==2.8
+PyMySQL==1.2.3

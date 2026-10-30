@@ -1,5 +1,26 @@
-# FiveM resources (NOT implemented)
+# FiveM resources (draft, framework-agnostic)
 
-Keep gameplay resources server-authoritative and isolated by domain. No downloaded third-party RP core is included. Do not deploy example config without an approved game DDoS protected endpoint, origin policy, reviewed resources, and distinct secret storage.
+Nothing here has been run inside FXServer yet. See
+[ADR 0002](../docs/adr/0002-framework-agnostic-base.md).
 
-Intended layout: `resources/[rp]/`, `resources/[sentinel]/` and non-secret `config/`. Empty directories are not retained by Git; add them alongside approved resources.
+```text
+fivem/
+  server.cfg.example        # copy to server.cfg on the host (git-ignored)
+  secrets.cfg.example       # copy to secrets.cfg on the host (git-ignored)
+  resources/
+    [sentinel]/sentinel_telemetry   # Emit/GetStats exports, observe mode by default
+    [rp]/rp_economy                 # server-only Transfer export over econ_transfer
+```
+
+The RP core (Qbox vs custom/legacy) is not included until the D-02 spike is
+decided. Third-party resources such as `oxmysql` are not vendored.
+
+## Rules for every resource
+- The server validates every economy and permission change. Clients only send
+  requests; they never send amounts or roles that the server trusts.
+- Use `exports.rp_economy:Transfer({ from, to, amount, reason, actor, idempotencyKey })`.
+  Never `UPDATE` balances directly.
+- Emit telemetry with `exports.sentinel_telemetry:Emit(type, fields)` using
+  pseudonymous refs only. No license, Steam, Discord, IP or names.
+- Do not deploy without an approved game-capable protected endpoint,
+  reviewed resources and separate secret storage.
