@@ -11,6 +11,7 @@ fivem/
     [sentinel]/sentinel_telemetry   # Emit/GetStats exports, observe mode by default
     [sentinel]/sentinel_admission   # join queue, CGNAT-safe, fail-open (docs/ADMISSION.md)
     [rp]/rp_economy                 # server-only Transfer export over econ_transfer
+    [dev]/sentinel_selftest         # staging-only smoke checks (deploy/staging), never in production
 ```
 
 The RP core (Qbox vs custom/legacy) is not included until the D-02 spike is
