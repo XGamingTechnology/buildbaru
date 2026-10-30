@@ -58,6 +58,21 @@
         "observe",
         "enforce"
       ]
+    },
+    "would_outcome": {
+      "enum": [
+        "accepted",
+        "deferred",
+        "rejected"
+      ]
+    },
+    "shared_source_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "queue_position": {
+      "type": "integer",
+      "minimum": 1
     }
   }
 }
