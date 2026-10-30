@@ -15,3 +15,9 @@ build/
 *.pfx
 coverage/
 __pycache__/
+
+# FiveM host-local files
+fivem/server.cfg
+fivem/secrets.cfg
+fivem/cache/
+fivem/txData/

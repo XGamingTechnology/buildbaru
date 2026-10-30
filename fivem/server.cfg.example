@@ -1,0 +1,44 @@
+# server.cfg.example — draft template, NOT a production config.
+# Copy to server.cfg on the target host. All secrets live in secrets.cfg,
+# which is git-ignored and must never be committed (see secrets.cfg.example).
+# Network exposure must go through the approved, game-capable protected edge
+# (NET-001/002/003/008, D-03). Do not publish the origin address.
+
+# Bind addresses are deployment-specific; fill in on the host, not in Git.
+# endpoint_add_tcp "<bind-address>:30120"
+# endpoint_add_udp "<bind-address>:30120"
+
+sv_hostname "Sentinel RP (dev)"
+sets locale "id-ID"
+sv_maxclients 48            # PERF gates decide real limits; 500 CCU is unproven.
+set onesync on
+sv_scriptHookAllowed 0
+# sv_enforceGameBuild <build>  # TBD in D-02 spike; pin explicitly once chosen.
+
+# Secrets (license key, DB connection string, ingest token).
+exec secrets.cfg
+
+# --- Sentinel telemetry (observe mode while sentinel_ingest_url is empty) ---
+set sentinel_queue_capacity 5000
+set sentinel_batch_size 200
+set sentinel_flush_ms 2000
+set sentinel_interval_s 60
+# set sentinel_ingest_url "<private Sentinel ingest URL; never a public endpoint>"
+
+# --- Admission / join queue (docs/ADMISSION.md). Keep observe until approved ---
+set sentinel_admission_mode observe
+set sentinel_admission_queue_capacity 200
+set sentinel_admission_queue_timeout_s 900
+set sentinel_admission_rate_window_s 60
+set sentinel_admission_rate_max 6
+set sentinel_admission_cooldown_s 30
+
+# --- Economy ---
+set rp_economy_max_transfer 100000000
+
+# --- Resource start order ---
+# Framework core (Qbox vs custom) is undecided (D-02) and intentionally absent.
+ensure oxmysql              # third-party, not vendored; license review D-09
+ensure sentinel_telemetry
+ensure sentinel_admission
+ensure rp_economy

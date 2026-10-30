@@ -1,33 +1,71 @@
 {
-  "schema_status": "illustrative_only",
+  "schema_status": "draft_v1_synthetic_fixtures",
   "events": [
     {
+      "schema_version": "1",
       "event_type": "connection_attempt",
       "event_id": "evt-synthetic-1",
       "ts": "2026-10-26T00:00:00Z",
       "source_ref_pseudonym": "demo-pseudo-1",
       "outcome": "accepted",
       "elapsed_ms": 142,
-      "edge_reason": "none"
+      "edge_reason": "none",
+      "admission_mode": "observe"
     },
     {
+      "schema_version": "1",
+      "event_type": "game_session",
+      "event_id": "evt-synthetic-2",
+      "ts": "2026-10-26T00:10:00Z",
+      "session_ref": "sess-synthetic-1",
+      "phase": "dropped",
+      "duration_s": 600,
+      "drop_category": "timeout"
+    },
+    {
+      "schema_version": "1",
       "event_type": "economic_mutation",
+      "event_id": "evt-synthetic-3",
+      "ts": "2026-10-26T00:01:00Z",
       "tx_id": "tx-synthetic-1",
       "account_ref": "demo-account",
+      "counterparty_ref": "treasury",
       "delta": -100,
       "currency": "game_cash",
       "cause": "synthetic_test",
       "idempotency_key": "test-retry-1",
-      "actor_ref": "demo-actor"
+      "actor_ref": "demo-actor",
+      "status": "committed"
     },
     {
+      "schema_version": "1",
+      "event_type": "game_abuse_signal",
+      "event_id": "evt-synthetic-4",
+      "ts": "2026-10-26T00:02:00Z",
+      "subject_ref": "demo-pseudo-1",
+      "rule_id": "ECON-001",
+      "signal_kind": "rate_limit",
+      "score": 0.4,
+      "evidence_refs": ["evt-synthetic-3"]
+    },
+    {
+      "schema_version": "1",
+      "event_type": "network_interval",
+      "event_id": "evt-synthetic-5",
+      "ts": "2026-10-26T00:05:00Z",
+      "source": "synthetic",
+      "interval_s": 60,
+      "metrics": {"players": 12, "join_attempts": 3, "join_failures": 0, "telemetry_dropped": 0}
+    },
+    {
+      "schema_version": "1",
       "event_type": "security_incident",
+      "event_id": "evt-synthetic-6",
+      "ts": "2026-10-26T00:06:00Z",
       "incident_id": "inc-synthetic-1",
       "severity": "SEV-3",
       "status": "open",
-      "evidence_refs": [
-        "evt-synthetic-1"
-      ],
+      "evidence_refs": ["evt-synthetic-1"],
       "decisions": [],
       "approver": null,
       "rollback_ref": null

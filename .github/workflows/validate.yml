@@ -21,3 +21,40 @@ jobs:
           echo 'Scaffold checks passed (not application/runtime tests)'
       - name: Validate discovery documentation
         run: python3 tests/check_discovery.py
+
+  tests:
+    # Contract, pure-Lua and ledger tests on synthetic data. They do NOT run
+    # FXServer, so they do not prove in-game behaviour or any CCU target.
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_DATABASE: sentinel_test
+          MARIADB_USER: sentinel_test
+          MARIADB_PASSWORD: synthetic-only
+          MARIADB_ROOT_PASSWORD: synthetic-only-root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      SENTINEL_TEST_DB_HOST: 127.0.0.1
+      SENTINEL_TEST_DB_PORT: '3306'
+      SENTINEL_TEST_DB_USER: sentinel_test
+      SENTINEL_TEST_DB_PASSWORD: synthetic-only
+      SENTINEL_TEST_DB_NAME: sentinel_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: python -m pip install -r tests/requirements.txt
+      - name: Grant routine/trigger privileges to the disposable test user
+        run: >
+          mysql --protocol=TCP -h 127.0.0.1 -u root -psynthetic-only-root -e
+          "GRANT ALL ON sentinel_test.* TO 'sentinel_test'@'%'; SET GLOBAL log_bin_trust_function_creators = 1;"
+      - name: Run tests
+        run: python -m unittest discover -s tests -v

@@ -1,12 +1,25 @@
-# Required tests (future)
+# Tests
 
-Functional: character persistence, permissions, inventory and reconnect.
-Security: forged event rejection, privilege escalation, CGNAT fairness and admission degradation.
-Economy: atomic debit/credit, repeated idempotency key, concurrent spending and DB interruption.
-Performance: real or otherwise clearly identified test clients, hotspot and varied ISP metrics.
-Restore: offsite recovery, migration rollback and ledger reconciliation.
+All tests use local, synthetic data only.
 
-No tests in this repository yet demonstrate real FiveM behavior.
+```bash
+python3 -m pip install -r tests/requirements.txt
+python3 -m unittest discover -s tests -v
+```
+
+| File | Covers | Needs |
+|---|---|---|
+| `test_contracts.py` | Six v1 schemas, valid examples, privacy and negative fixtures | — |
+| `test_lua_units.py` | Telemetry queue bounds, envelope privacy guard, economy request validation (Lua 5.4 via lupa) | — |
+| `test_admission.py` | Admission modes, CGNAT fairness, cooldown expiry, queue order/capacity/reservations/timeout, pseudonym refs, schema fit | — |
+| `test_db_ledger.py` | Ledger atomicity, idempotent replay, concurrent debit, duplicate submission, deadlock ordering, lock timeout, append-only, reconciliation, down migration | Disposable MariaDB via `SENTINEL_TEST_DB_*`, otherwise skipped |
+
+`test_db_ledger.py` drops and recreates the economy tables. Never point it at a
+shared or production database.
+
+Not yet covered: running resources inside FXServer, oxmysql result shapes,
+permissions, inventory, FXServer deferrals, restore drills and any
+performance gate. No test here demonstrates real FiveM behaviour or CCU.
 
 ## Discovery static validation
 
