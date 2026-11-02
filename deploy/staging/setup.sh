@@ -5,14 +5,20 @@
 # Required:
 #   FX_ARTIFACT_URL   Linux fx.tar.xz from https://runtime.fivem.net/artifacts/fivem/build_proot_linux/master/
 #   OXMYSQL_VERSION   oxmysql release tag to install (license review pending, D-09)
+#   OX_LIB_VERSION    ox_lib release tag (the release zip contains the built UI)
+#   QBX_CORE_VERSION  qbx_core git tag (ADR 0003; GPL-3.0)
 # Optional:
 #   FX_STAGING_DIR (default ~/fxstaging), REPO_URL, REPO_REF (default main)
+#
+# qbx_core needs FXServer artifact 10731 or newer and OneSync.
 #
 # The license key is never passed here: edit secrets.cfg on the host afterwards.
 set -euo pipefail
 
 : "${FX_ARTIFACT_URL:?set FX_ARTIFACT_URL to a Linux fx.tar.xz URL from the FiveM artifacts page}"
 : "${OXMYSQL_VERSION:?set OXMYSQL_VERSION to a reviewed oxmysql release tag}"
+: "${OX_LIB_VERSION:?set OX_LIB_VERSION to a reviewed ox_lib release tag}"
+: "${QBX_CORE_VERSION:?set QBX_CORE_VERSION to a reviewed qbx_core git tag}"
 REPO_URL="${REPO_URL:-https://github.com/XGamingTechnology/buildbaru.git}"
 REPO_REF="${REPO_REF:-main}"
 BASE="${FX_STAGING_DIR:-$HOME/fxstaging}"
@@ -52,18 +58,58 @@ for group in '[sentinel]' '[rp]' '[dev]'; do
   ln -sfn "$BASE/buildbaru/fivem/resources/$group" "$BASE/data/resources/$group"
 done
 
-log "oxmysql $OXMYSQL_VERSION"
-if [ ! -f "$BASE/data/resources/oxmysql/fxmanifest.lua" ]; then
+# Installs <name> from <owner>/<name> release asset <name>.zip at <tag>.
+install_release_zip() {
+  local owner="$1" name="$2" tag="$3" tmp manifest
+  log "$name $tag"
+  if [ -f "$BASE/data/resources/$name/fxmanifest.lua" ]; then
+    echo "already installed (delete $BASE/data/resources/$name to change versions)"
+    return
+  fi
   tmp="$(mktemp -d)"
-  curl -fL "https://github.com/overextended/oxmysql/releases/download/${OXMYSQL_VERSION}/oxmysql.zip" -o "$tmp/oxmysql.zip"
-  sha256sum "$tmp/oxmysql.zip"
-  unzip -q "$tmp/oxmysql.zip" -d "$tmp/unzipped"
-  manifest="$(find "$tmp/unzipped" -name fxmanifest.lua -path '*oxmysql*' | head -n 1)"
-  [ -n "$manifest" ] || { echo "oxmysql.zip has no fxmanifest.lua; check the release asset" >&2; exit 1; }
-  cp -r "$(dirname "$manifest")" "$BASE/data/resources/oxmysql"
+  curl -fL "https://github.com/$owner/$name/releases/download/$tag/$name.zip" -o "$tmp/$name.zip"
+  sha256sum "$tmp/$name.zip"
+  unzip -q "$tmp/$name.zip" -d "$tmp/unzipped"
+  manifest="$(find "$tmp/unzipped" -name fxmanifest.lua -path "*$name*" | head -n 1)"
+  [ -n "$manifest" ] || { echo "$name.zip has no fxmanifest.lua; check the release asset" >&2; exit 1; }
+  cp -r "$(dirname "$manifest")" "$BASE/data/resources/$name"
   rm -rf "$tmp"
+}
+install_release_zip overextended oxmysql "$OXMYSQL_VERSION"
+install_release_zip overextended ox_lib "$OX_LIB_VERSION"
+
+log "qbx_core $QBX_CORE_VERSION"
+QBX="$BASE/data/resources/qbx_core"
+if [ ! -f "$QBX/fxmanifest.lua" ]; then
+  git -c advice.detachedHead=false clone -q --depth 1 --branch "$QBX_CORE_VERSION" \
+    https://github.com/Qbox-Project/qbx_core.git "$QBX"
+  git -C "$QBX" log --oneline -1
+  # Route paychecks through the ledger (docs/QBOX.md). Patched only if the
+  # stock function is found unchanged; otherwise edit it by hand.
+  python3 -I - "$QBX/config/server.lua" <<'PY' || echo "WARNING: patch config/server.lua sendPaycheck by hand (docs/QBOX.md)"
+import sys
+path = sys.argv[1]
+src = open(path, encoding='utf-8').read()
+old = """    sendPaycheck = function (player, payment)
+        player.Functions.AddMoney('bank', payment)
+        Notify(player.PlayerData.source, locale('info.received_paycheck', payment))
+        TriggerEvent('qbx_core:server:onPaycheck', player.PlayerData.source, payment)
+    end,"""
+new = """    sendPaycheck = function (player, payment)
+        -- Sentinel RP: paychecks go through the econ ledger (ADR 0003).
+        local result = exports.rp_qbx_bridge:Paycheck(player.PlayerData.source, payment)
+        if result.ok then
+            Notify(player.PlayerData.source, locale('info.received_paycheck', payment))
+            TriggerEvent('qbx_core:server:onPaycheck', player.PlayerData.source, payment)
+        end
+    end,"""
+if src.count(old) != 1:
+    sys.exit(1)
+open(path, 'w', encoding='utf-8').write(src.replace(old, new))
+print("patched sendPaycheck to use rp_qbx_bridge:Paycheck")
+PY
 else
-  echo "already installed (delete $BASE/data/resources/oxmysql to change versions)"
+  echo "already installed (delete $QBX to change versions)"
 fi
 
 log "Database $DB_NAME (local only)"
@@ -104,6 +150,17 @@ apply() {
 }
 apply 1 0001_economy_ledger.up.sql
 apply 2 0002_operator_workflow.up.sql
+apply 3 0003_econ_open_account.up.sql
+sudo mariadb "$DB_NAME" < "$QBX/qbx_core.sql"
+echo "applied qbx_core.sql"
+# Qbox tables need normal DML; ledger and ops tables stay SELECT/EXECUTE only.
+for table in $(sudo mariadb -N "$DB_NAME" -e "SELECT table_name FROM information_schema.tables
+    WHERE table_schema = '$DB_NAME' AND table_type = 'BASE TABLE'
+      AND table_name NOT LIKE 'econ\\_%' AND table_name NOT LIKE 'ops\\_%'
+      AND table_name <> 'schema_migrations'"); do
+  sudo mariadb -e "GRANT SELECT, INSERT, UPDATE, DELETE ON \`$DB_NAME\`.\`$table\` TO '$DB_USER'@'localhost'"
+  echo "granted DML on $table"
+done
 sudo mariadb "$DB_NAME" < "$BASE/buildbaru/deploy/staging/seed_selftest.sql" >/dev/null
 echo "selftest accounts seeded"
 
