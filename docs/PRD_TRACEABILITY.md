@@ -23,6 +23,8 @@ All items above were *unimplemented* in the bootstrap.
 | Operator workflow | `db/migrations/0002_*`, `docs/OPERATOR_WORKFLOW.md` | MariaDB tests: roles, MFA, two-person rule, closed action kinds, bounded TTL, evidence required, revoke/expiry, trigger guards vs direct SQL, hash-chain validity incl. concurrent appends | sentinel-api auth/MFA, enforcement wiring, SOC UI, retention (D-08) |
 | Telemetry | `contracts/schemas/v1`, `fivem/resources/[sentinel]/sentinel_telemetry` | Schema + negative fixtures; Lua queue bound and privacy guard unit tests | FXServer run, ingest service, retention (D-08) |
 
+In-server evidence: [staging run 001](evidence/staging-run-001.md) (selftest 30/30, no players).
+
 See [ADR 0002](adr/0002-framework-agnostic-base.md). Passing these tests is not
 acceptance of any PRD requirement.
 
