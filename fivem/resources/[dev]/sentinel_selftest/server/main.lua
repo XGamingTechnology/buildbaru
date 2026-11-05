@@ -106,7 +106,10 @@ local function run()
   if GetResourceState('qbx_core') == 'missing' then
     skip('Qbox checks', 'qbx_core is not installed')
   else
-    for _, res in ipairs({ 'ox_lib', 'qbx_core', 'rp_qbx_bridge', 'rp_banking' }) do
+    check('cash is not an inventory item (inventory:accounts = [])',
+      GetConvar('inventory:accounts', '["money"]') == '[]', GetConvar('inventory:accounts', '(unset)'))
+    check('ox_inventory uses the qbx framework', GetConvar('inventory:framework', '') == 'qbx')
+    for _, res in ipairs({ 'ox_lib', 'ox_inventory', 'qbx_core', 'rp_qbx_bridge', 'rp_banking' }) do
       check('resource started: ' .. res, GetResourceState(res) == 'started', GetResourceState(res))
     end
 

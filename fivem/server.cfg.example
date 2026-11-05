@@ -38,6 +38,12 @@ set rp_economy_max_transfer 100000000
 
 # --- Qbox bridge and banking (docs/QBOX.md) ---
 set rp_qbx_money_guard enforce
+
+# --- ox_inventory (required by qbx_core) ---
+setr inventory:framework "qbx"
+# Cash lives only in the ledger (ADR 0003): never as an inventory item, or
+# items could duplicate money outside econ_transfer.
+setr inventory:accounts "[]"
 set rp_qbx_opening_cash 500
 set rp_qbx_opening_bank 5000
 set rp_qbx_paycheck_window_s 600
@@ -47,6 +53,7 @@ set rp_qbx_paycheck_window_s 600
 ensure ox_lib
 ensure oxmysql
 ensure qbx_core
+ensure ox_inventory
 ensure sentinel_telemetry
 ensure sentinel_admission
 ensure rp_economy

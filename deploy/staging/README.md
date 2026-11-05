@@ -10,14 +10,16 @@ It is not public, has no real players and must use synthetic data only.
   [artifacts page](https://runtime.fivem.net/artifacts/fivem/build_proot_linux/master/).
   Use the one marked recommended; Qbox needs build 10731 or newer.
 - Release tags for `oxmysql` (<https://github.com/overextended/oxmysql/releases>),
-  `ox_lib` (<https://github.com/overextended/ox_lib/releases>) and `qbx_core`
-  (<https://github.com/Qbox-Project/qbx_core/releases>). Record all of them in
-  the evidence.
+  `ox_lib` (<https://github.com/overextended/ox_lib/releases>), `ox_inventory`
+  (<https://github.com/overextended/ox_inventory/releases>, 2.42.1 or newer)
+  and `qbx_core` (<https://github.com/Qbox-Project/qbx_core/releases>). Record
+  all of them in the evidence.
 
 ## Steps
 ```bash
 git clone https://github.com/XGamingTechnology/buildbaru.git ~/buildbaru-setup
-FX_ARTIFACT_URL='<fx.tar.xz URL>' OXMYSQL_VERSION='<tag>' OX_LIB_VERSION='<tag>' QBX_CORE_VERSION='<tag>' \
+FX_ARTIFACT_URL='<fx.tar.xz URL>' OXMYSQL_VERSION='<tag>' OX_LIB_VERSION='<tag>' \
+  OX_INVENTORY_VERSION='<tag>' QBX_CORE_VERSION='<tag>' \
   bash ~/buildbaru-setup/deploy/staging/setup.sh
 nano ~/fxstaging/data/secrets.cfg      # replace CHANGE_ME with the license key
 tmux new -s fx
@@ -29,7 +31,11 @@ tmux new -s fx
 - Applies migrations 0000–0003 and Qbox's `qbx_core.sql`.
 - Creates an app user with `SELECT, EXECUTE` on the database, plus DML on the
   Qbox tables only. It cannot `UPDATE` or `INSERT` ledger tables.
-- Installs `oxmysql`, `ox_lib` and `qbx_core` at the given tags.
+- Installs `oxmysql`, `ox_lib` (with its bundled `require`), `ox_inventory` and
+  `qbx_core` at the given tags.
+- Creates the tables `ox_inventory` needs as root: `ox_inventory`,
+  `player_vehicles` (from `qbx_vehicles`' `vehicles.sql`) and the inventory,
+  glovebox and trunk columns.
 - Patches `qbx_core/config/server.lua` so paychecks go through the ledger. If
   the stock code has changed, it prints a warning and you patch it by hand
   (see [docs/QBOX.md](../../docs/QBOX.md)).
