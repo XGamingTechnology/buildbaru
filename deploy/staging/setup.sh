@@ -58,11 +58,13 @@ for group in '[sentinel]' '[rp]' '[dev]'; do
   ln -sfn "$BASE/buildbaru/fivem/resources/$group" "$BASE/data/resources/$group"
 done
 
-# Installs <name> from <owner>/<name> release asset <name>.zip at <tag>.
+# Installs every resource bundled in <owner>/<name> release asset <name>.zip
+# at <tag> (ox_lib, for example, ships its `require` dependency in the same
+# zip). Resources that already exist are kept.
 install_release_zip() {
-  local owner="$1" name="$2" tag="$3" tmp manifest
+  local owner="$1" name="$2" tag="$3" tmp dir res t skip taken=""
   log "$name $tag"
-  if [ -f "$BASE/data/resources/$name/fxmanifest.lua" ]; then
+  if [ -f "$BASE/data/resources/$name/fxmanifest.lua" ] && [ "$tag" = "installed" ]; then
     echo "already installed (delete $BASE/data/resources/$name to change versions)"
     return
   fi
@@ -70,9 +72,26 @@ install_release_zip() {
   curl -fL "https://github.com/$owner/$name/releases/download/$tag/$name.zip" -o "$tmp/$name.zip"
   sha256sum "$tmp/$name.zip"
   unzip -q "$tmp/$name.zip" -d "$tmp/unzipped"
-  manifest="$(find "$tmp/unzipped" -name fxmanifest.lua -path "*$name*" | head -n 1)"
-  [ -n "$manifest" ] || { echo "$name.zip has no fxmanifest.lua; check the release asset" >&2; exit 1; }
-  cp -r "$(dirname "$manifest")" "$BASE/data/resources/$name"
+  # Shallowest manifests first; anything nested inside a taken resource is skipped.
+  while IFS= read -r dir; do
+    skip=""
+    for t in $taken; do
+      case "$dir/" in "$t"/*) skip=1 ;; esac
+    done
+    [ -n "$skip" ] && continue
+    taken="$taken $dir"
+    # Use the manifest's `name` (cfxlua-require declares name 'require'), so the
+    # folder matches what other manifests list as a dependency.
+    res="$(sed -n "s/^name[[:space:]]*['\"]\([A-Za-z0-9_.-]*\)['\"].*/\1/p" "$dir/fxmanifest.lua" | head -n 1)"
+    res="${res:-$(basename "$dir")}"
+    if [ -f "$BASE/data/resources/$res/fxmanifest.lua" ]; then
+      echo "keeping existing $res"
+    else
+      cp -r "$dir" "$BASE/data/resources/$res"
+      echo "installed $res"
+    fi
+  done < <(find "$tmp/unzipped" -maxdepth 3 -name fxmanifest.lua -printf '%d %h\n' | sort -n | cut -d' ' -f2-)
+  [ -f "$BASE/data/resources/$name/fxmanifest.lua" ] || { echo "$name.zip has no $name resource; check the release asset" >&2; exit 1; }
   rm -rf "$tmp"
 }
 install_release_zip overextended oxmysql "$OXMYSQL_VERSION"
