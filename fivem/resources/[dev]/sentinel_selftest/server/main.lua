@@ -115,6 +115,17 @@ local function run()
       qbxConfig:find('rp_qbx_bridge:Paycheck', 1, true) ~= nil)
 
     if GetResourceState('rp_qbx_bridge') == 'started' then
+      -- The bridge registers its hooks asynchronously; give it a moment.
+      local guard = false
+      for _ = 1, 10 do
+        guard = exports.rp_qbx_bridge:GuardActive()
+        if guard then
+          break
+        end
+        Wait(1000)
+      end
+      check('money guard hooks registered in qbx_core', guard == true)
+
       -- A synthetic citizenid that no real character uses.
       local cid = 'SELFTEST01'
       local first = exports.rp_qbx_bridge:AccountId(cid, 'bank')

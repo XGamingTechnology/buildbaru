@@ -145,19 +145,63 @@ local function citizenOf(source)
   return player and player.PlayerData.citizenid or nil
 end
 
-CreateThread(function()
+local hooked = {}
+
+-- Registers the money guard hooks that are still missing. Returns true when
+-- all three are in place.
+local function registerGuard()
   for _, hookName in ipairs({ 'addMoney', 'removeMoney', 'setMoney' }) do
-    exports.qbx_core:registerHook(hookName, function(payload)
-      local allow, signal = Logic.guard(payload, syncing, mode)
-      if signal then
-        emitSignal(citizenOf(payload.source), hookName)
+    if not hooked[hookName] then
+      local ok, err = pcall(function()
+        exports.qbx_core:registerHook(hookName, function(payload)
+          local allow, signal = Logic.guard(payload, syncing, mode)
+          if signal then
+            emitSignal(citizenOf(payload.source), hookName)
+          end
+          return allow
+        end)
+      end)
+      if not ok then
+        return false, err
       end
-      return allow
-    end)
+      hooked[hookName] = true
+    end
   end
+  return true
+end
+
+exports('GuardActive', function()
+  return hooked.addMoney == true and hooked.removeMoney == true and hooked.setMoney == true
+end)
+
+CreateThread(function()
+  -- qbx_core may still be initialising when this resource starts; retry until
+  -- its exports answer instead of failing once and leaving money unguarded.
+  local ready, err = false, nil
+  for _ = 1, 60 do
+    if GetResourceState('qbx_core') == 'started' then
+      ready, err = registerGuard()
+      if ready then
+        break
+      end
+    end
+    Wait(1000)
+  end
+  if not ready then
+    print(('^1[rp_qbx_bridge] money guard NOT active: %s^0'):format(tostring(err or 'qbx_core not started')))
+    return
+  end
+  print(('[rp_qbx_bridge] money guard active (%s)'):format(mode))
 
   -- Resource restart: re-mirror everyone already loaded.
-  for src in pairs(exports.qbx_core:GetQBPlayers() or {}) do
+  local ok, players = pcall(function()
+    return exports.qbx_core:GetQBPlayers()
+  end)
+  if not ok then
+    print(('[rp_qbx_bridge] could not list loaded players: %s'):format(tostring(players)))
+    return
+  end
+  for src in pairs(players or {}) do
     Sync(src)
   end
 end)

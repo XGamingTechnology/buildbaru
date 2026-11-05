@@ -180,6 +180,12 @@ for table in $(sudo mariadb -N "$DB_NAME" -e "SELECT table_name FROM information
   sudo mariadb -e "GRANT SELECT, INSERT, UPDATE, DELETE ON \`$DB_NAME\`.\`$table\` TO '$DB_USER'@'localhost'"
   echo "granted DML on $table"
 done
+# qbx_core changes its own schema on every start (v1.24: CREATE TABLE users
+# plus indexes, ALTER TABLE players ADD COLUMN userId). Allow exactly that on
+# those two tables; ledger and ops tables stay locked.
+sudo mariadb -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, INDEX ON \`$DB_NAME\`.\`users\` TO '$DB_USER'@'localhost';
+                 GRANT ALTER, INDEX ON \`$DB_NAME\`.\`players\` TO '$DB_USER'@'localhost'"
+echo "granted qbx_core schema changes on users/players"
 sudo mariadb "$DB_NAME" < "$BASE/buildbaru/deploy/staging/seed_selftest.sql" >/dev/null
 echo "selftest accounts seeded"
 
