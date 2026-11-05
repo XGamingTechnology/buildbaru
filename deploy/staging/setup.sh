@@ -7,6 +7,10 @@
 #   OXMYSQL_VERSION   oxmysql release tag to install (license review pending, D-09)
 #   OX_LIB_VERSION    ox_lib release tag (the release zip contains the built UI)
 #   QBX_CORE_VERSION  qbx_core git tag (ADR 0003; GPL-3.0)
+#   OX_INVENTORY_VERSION  ox_inventory release tag (qbx_core requires >= 2.42.1)
+# Optional:
+#   QBX_VEHICLES_VERSION  qbx_vehicles tag whose vehicles.sql provides
+#                         player_vehicles for ox_inventory (default v1.4.2)
 # Optional:
 #   FX_STAGING_DIR (default ~/fxstaging), REPO_URL, REPO_REF (default main)
 #
@@ -19,6 +23,8 @@ set -euo pipefail
 : "${OXMYSQL_VERSION:?set OXMYSQL_VERSION to a reviewed oxmysql release tag}"
 : "${OX_LIB_VERSION:?set OX_LIB_VERSION to a reviewed ox_lib release tag}"
 : "${QBX_CORE_VERSION:?set QBX_CORE_VERSION to a reviewed qbx_core git tag}"
+: "${OX_INVENTORY_VERSION:?set OX_INVENTORY_VERSION to a reviewed ox_inventory release tag}"
+QBX_VEHICLES_VERSION="${QBX_VEHICLES_VERSION:-v1.4.2}"
 REPO_URL="${REPO_URL:-https://github.com/XGamingTechnology/buildbaru.git}"
 REPO_REF="${REPO_REF:-main}"
 BASE="${FX_STAGING_DIR:-$HOME/fxstaging}"
@@ -96,6 +102,7 @@ install_release_zip() {
 }
 install_release_zip overextended oxmysql "$OXMYSQL_VERSION"
 install_release_zip overextended ox_lib "$OX_LIB_VERSION"
+install_release_zip overextended ox_inventory "$OX_INVENTORY_VERSION"
 
 log "qbx_core $QBX_CORE_VERSION"
 QBX="$BASE/data/resources/qbx_core"
@@ -173,6 +180,23 @@ apply 3 0003_econ_open_account.up.sql
 sudo mariadb "$DB_NAME" < "$QBX/qbx_core.sql"
 echo "applied qbx_core.sql"
 # Qbox tables need normal DML; ledger and ops tables stay SELECT/EXECUTE only.
+# ox_inventory (framework qbx) needs these tables and columns. Create them as
+# root so the game user does not need DDL rights. The DDL matches
+# ox_inventory's own modules/mysql/server.lua and qbx_vehicles' vehicles.sql.
+curl -fsSL "https://raw.githubusercontent.com/Qbox-Project/qbx_vehicles/$QBX_VEHICLES_VERSION/vehicles.sql" \
+  | sudo mariadb "$DB_NAME"
+sudo mariadb "$DB_NAME" -e "
+  CREATE TABLE IF NOT EXISTS \`ox_inventory\` (
+    \`owner\` varchar(60) DEFAULT NULL,
+    \`name\` varchar(100) NOT NULL,
+    \`data\` longtext DEFAULT NULL,
+    \`lastupdated\` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+    UNIQUE KEY \`owner\` (\`owner\`,\`name\`)
+  );
+  ALTER TABLE \`player_vehicles\` ADD COLUMN IF NOT EXISTS \`glovebox\` LONGTEXT NULL;
+  ALTER TABLE \`player_vehicles\` ADD COLUMN IF NOT EXISTS \`trunk\` LONGTEXT NULL;
+  ALTER TABLE \`players\` ADD COLUMN IF NOT EXISTS \`inventory\` LONGTEXT NULL;"
+echo "prepared ox_inventory tables (player_vehicles from qbx_vehicles $QBX_VEHICLES_VERSION)"
 for table in $(sudo mariadb -N "$DB_NAME" -e "SELECT table_name FROM information_schema.tables
     WHERE table_schema = '$DB_NAME' AND table_type = 'BASE TABLE'
       AND table_name NOT LIKE 'econ\\_%' AND table_name NOT LIKE 'ops\\_%'
@@ -206,6 +230,10 @@ EOF
   echo "created $CFG"
 else
   echo "keeping existing $CFG"
+  if ! grep -q 'inventory:framework' "$CFG"; then
+    echo "WARNING: $CFG predates ox_inventory; qbx_core will refuse to start." >&2
+    echo "         Move it aside and re-run this script to regenerate it." >&2
+  fi
 fi
 
 cat <<EOF

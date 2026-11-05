@@ -11,6 +11,7 @@ vendored here.
 ensure ox_lib
 ensure oxmysql
 ensure qbx_core
+ensure ox_inventory
 ensure sentinel_telemetry
 ensure sentinel_admission
 ensure rp_economy
@@ -41,6 +42,20 @@ code matches.
 2. Remove `crypto` from `money.moneyTypes`, or keep it out of gameplay; the
    ledger does not cover it.
 3. Keep `paycheckSociety = false` until society accounts exist in the ledger.
+
+## ox_inventory
+
+`qbx_core` refuses to start without `ox_inventory` 2.42.1 or newer, and without
+`setr inventory:framework "qbx"`. On a startup error it runs
+`quit immediately` and stops the whole server.
+
+Keep `setr inventory:accounts "[]"`. With the default (`["money"]`), cash
+becomes an inventory item, and `ox_inventory` writes item changes back with
+`SetMoney`. That creates a second money path next to the ledger: items could be
+dropped, traded or duplicated outside `econ_transfer`, and the money guard
+would block the writes back, leaving inventory and ledger out of sync. Loot
+tables that hand out a `money` item should be removed or turned into ledger
+payouts before release.
 
 ## Convars
 
